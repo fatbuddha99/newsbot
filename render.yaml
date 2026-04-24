@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: signal-terminal
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python app.py
+    envVars:
+      - key: NEWS_TERMINAL_HOST
+        value: 0.0.0.0
+      - key: NEWS_TERMINAL_PORT
+        fromService:
+          type: web
+          name: signal-terminal
+          property: port
+      - key: GEMINI_API_KEY
+        sync: false

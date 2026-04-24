@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Signal Terminal</title>
+    <link rel="stylesheet" href="/static/styles.css">
+  </head>
+  <body>
+    <div class="backdrop"></div>
+    <main class="shell">
+      <section class="shell__header">
+        <div class="shell__hero">
+          <p class="eyebrow">Live News Intelligence</p>
+          <h1>Signal Terminal</h1>
+          <p class="subhead">Browser console for your RSS scanner, focus filter, and Gemini analysis agent.</p>
+        </div>
+        <div class="status-grid">
+          <div class="status-card">
+            <span class="status-label">Mode</span>
+            <strong id="modeValue">FOCUS</strong>
+          </div>
+          <div class="status-card">
+            <span class="status-label">Engine</span>
+            <strong>Python RSS + Gemini</strong>
+          </div>
+          <div class="status-card">
+            <span class="status-label">Scan</span>
+            <strong id="storyCount">0 stories</strong>
+          </div>
+          <div class="status-card">
+            <span class="status-label">Refresh</span>
+            <strong id="refreshStatus">Every 15 min</strong>
+          </div>
+        </div>
+      </section>
+
+      <section class="console">
+        <div class="console__toolbar">
+          <form id="commandForm" class="command-row">
+            <label class="command-label" for="queryInput">query</label>
+            <input id="queryInput" name="query" type="text" autocomplete="off" placeholder="GLOBAL or ticker / keyword">
+            <button type="submit">Run Scan</button>
+            <button id="focusToggle" class="secondary" type="button">Focus: ON</button>
+            <button id="refreshButton" class="secondary" type="button">Refresh</button>
+          </form>
+        </div>
+
+        <div id="terminalLog" class="terminal-log" aria-live="polite"></div>
+      </section>
+
+      <section class="panels">
+        <article class="panel">
+          <div class="panel__header">
+            <p class="eyebrow">Top Signals</p>
+            <h2>Headlines</h2>
+          </div>
+          <div id="headlinesList" class="headlines"></div>
+        </article>
+
+        <article class="panel panel--analysis">
+          <div class="panel__header">
+            <p class="eyebrow">AI Agent</p>
+            <h2>Strategic Insight</h2>
+          </div>
+          <pre id="analysisOutput" class="analysis">Run a scan to generate an intelligence brief.</pre>
+        </article>
+      </section>
+    </main>
+
+    <script src="/static/app.js"></script>
+  </body>
+</html>
