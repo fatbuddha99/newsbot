@@ -194,7 +194,23 @@ def build_sources(query=None):
     ]
 
 
-def analyze_with_gemini(headlines, model=DEFAULT_GEMINI_MODEL):
+def build_analysis_payload(items, query=None, focus_mode=True):
+    lines = []
+    for index, item in enumerate(items[:MAX_HEADLINES_FOR_LLM], 1):
+        matches = ", ".join(item.get("scoreMatches", [])) or "none"
+        lines.append(
+            f"{index}. [source={item['source']}] [score={item['signalScore']}] "
+            f"[matches={matches}] {item['title']}"
+        )
+    return (
+        f"Search query: {query or 'GLOBAL'}\n"
+        f"Focus mode: {'ON' if focus_mode else 'OFF'}\n"
+        "Prioritized headlines:\n"
+        + "\n".join(lines)
+    )
+
+
+def analyze_with_gemini(headlines_context, query=None, focus_mode=True, model=DEFAULT_GEMINI_MODEL):
     try:
         from google import genai
     except ImportError:
@@ -217,11 +233,35 @@ def analyze_with_gemini(headlines, model=DEFAULT_GEMINI_MODEL):
         }
 
     prompt = (
-        "You are a real-time macro and market signal analyst. "
-        "Read the headlines below and return a concise intelligence brief with these sections: "
-        "1. Main themes, 2. Why it matters now, 3. Potential market impact, 4. Risks / uncertainty, "
-        "5. What to monitor next. Keep the tone crisp and actionable.\n\n"
-        f"Headlines:\n{headlines}"
+        "You are a real-time macro, political-risk, and market signal analyst. "
+        "You are given prioritized headlines with heuristic signal scores and matched trigger phrases. "
+        "Use that ranking to focus on the most market-moving items first.\n\n"
+        "Return a concise intelligence brief in exactly this format:\n"
+        "Primary signal:\n"
+        "- One or two sentences on the dominant takeaway.\n\n"
+        "Main themes:\n"
+        "- 3 bullet points max.\n\n"
+        "Why it matters now:\n"
+        "- 2 bullet points max.\n\n"
+        "Likely market impact:\n"
+        "- Rates:\n"
+        "- Equities/sectors:\n"
+        "- Commodities/FX/crypto:\n\n"
+        "Bull case:\n"
+        "- 2 bullet points max.\n\n"
+        "Bear case:\n"
+        "- 2 bullet points max.\n\n"
+        "What to watch next:\n"
+        "- 4 bullet points max, as concrete catalysts or data points.\n\n"
+        "Confidence:\n"
+        "- Choose High, Medium, or Low and explain briefly.\n\n"
+        "Rules:\n"
+        "- Be crisp, concrete, and market-oriented.\n"
+        "- Prefer signal over recap.\n"
+        "- If the query is ticker-specific, center the analysis on that company or ticker first.\n"
+        "- If the evidence is mixed, say so clearly.\n"
+        "- Do not mention that you are an AI.\n\n"
+        f"{headlines_context}"
     )
 
     try:
@@ -272,8 +312,8 @@ def scan_news(query=None, focus_mode=True, include_analysis=True):
         "error": "AI analysis skipped.",
     }
     if include_analysis and ENABLE_LLM_ANALYSIS and visible_items:
-        headlines = "\n".join(f"- {item['title']}" for item in visible_items[:MAX_HEADLINES_FOR_LLM])
-        analysis = analyze_with_gemini(headlines)
+        headlines_context = build_analysis_payload(visible_items, query=query, focus_mode=focus_mode)
+        analysis = analyze_with_gemini(headlines_context, query=query, focus_mode=focus_mode)
 
     return {
         "query": query or "",
